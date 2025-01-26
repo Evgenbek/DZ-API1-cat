@@ -1,11 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.min.css"
+        integrity="sha512-xiunq9hpKsIcz42zt0o2vCo34xV0j6Ny8hgEylN3XBglZDtTZ2nwnqF/Z/TTCc18sGdvCjbFInNd++6q3J0N6g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .spinner_hidden[class] {
+            position: absolute;
+            top: -10000px;
+        }
+
+        .error {
+            color: crimson;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
+
 <body>
-    
+    <button class="button button-outline cat_button"><i
+            class="fa-solid fa-spinner fa-spin spinner spinner_hidden"></i>Вывести названия породы кошек</button>
+    <form class="form" action="">
+        <div class="form-field">
+
+            <label for="breeds cat">Выбирите породу кошки</label>
+            <select name="breeds cat" id="breeds cat" class="form-field-cat">
+            </select>
+        </div>
+        <button class="button button-outline submit_button hidden">
+            <i class="fa-solid fa-spinner fa-spin spinner-two spinner_hidden"></i>
+            <i class="fa-solid fa-download"></i>загрузить картинку</button>
+    </form>
+    <div class="result">
+    </div>
+    <h2 class="error"></h2>
+
+    <script src="https://kit.fontawesome.com/80d0029610.js" crossorigin="anonymous"></script>
+    <script>
+        const formBlock = document.querySelector('.form');
+        const catButtonBlock = document.querySelector('.cat_button');
+        const submitButtonBlock = document.querySelector('.submit_button');
+        const resultBlock = document.querySelector('.result');
+        const errorBlock = document.querySelector('.error');
+        const spinnerBlock = document.querySelector('.spinner');
+        const spinnerTwoBlock = document.querySelector('.spinner-two');
+        const formFieldCatBlock = document.querySelector('.form-field-cat');
+        const select = formBlock.querySelector('.form-field-cat');
+
+
+        catButtonBlock.addEventListener('click', (event) => {
+            catButtonBlock.setAttribute('disabled', true);
+            spinnerBlock.classList.remove('spinner_hidden');
+            errorBlock.classList.add('hidden');
+            resultBlock.textContent = '';
+            errorBlock.textContent = '';
+
+            fetch(`https://api.thecatapi.com/v1/breeds?x-api-key=live_EifTFIy2QG9tyQVhNYsoWhOTzpByyTz2MBUy8q8eIyjsnYftIQE5IliJXhGKvjWn`)
+                .then(response => {
+                    if (response.status !== 200) {
+                        throw new Error(`Status ${response.status}: ${response.statusText}`)
+                    }
+                    return response.json()
+                })
+                .then((data) => {
+                    resultBlock.classList.remove('hidden');
+                    for (let i = 0; i < data.length; i += 1) {
+                        const optionBlock = document.createElement('option');
+                        optionBlock.textContent = data[i].name;
+                        optionBlock.value = data[i].id;
+                        formFieldCatBlock.appendChild(optionBlock);
+                    };
+                })
+                .catch((error) => {
+                    errorBlock.textContent = error.message ? error.message : error;
+                })
+                .finally(() => {
+                    submitButtonBlock.classList.remove('hidden');
+                    catButtonBlock.classList.add('hidden');
+                });
+        });
+
+        formBlock.addEventListener('submit', (event) => {
+            event.preventDefault();
+            submitButtonBlock.setAttribute('disabled', true);
+            spinnerTwoBlock.classList.remove('spinner_hidden');
+            const target = event.target;
+
+            fetch(`https://api.thecatapi.com/v1/images/search?limit=10&breed_ids=${select.value}&api_key=live_EifTFIy2QG9tyQVhNYsoWhOTzpByyTz2MBUy8q8eIyjsnYftIQE5IliJXhGKvjWn`)
+                .then(response => {
+                    if (response.status !== 200) {
+                        throw new Error(`Status ${response.status}: ${response.statusText}`)
+                    }
+                    return response.json()
+                })
+                .then((data) => {
+                    resultBlock.classList.remove('hidden');
+                    const imageCat = document.createElement('img');
+                    imageCat.src = data[0].url;
+                    resultBlock.appendChild(imageCat);
+                })
+                .catch((error) => {
+                    errorBlock.textContent = error.message ? error.message : error;
+                })
+                .finally(() => {
+                    submitButtonBlock.removeAttribute('disabled');
+                    spinnerTwoBlock.classList.add('spinner_hidden');
+                });
+        })
+    </script>
 </body>
+
 </html>
